@@ -1,13 +1,14 @@
-import type { Assessment } from '@/api/types';
+import type { CheckResult } from '@/api/types';
 
 /**
- * Hands the assessment from the check screen to the result screen without
+ * Hands the result from the check screen to the result screen without
  * squeezing it into URL params.
  */
-let last: { babyId: string; babyName: string; assessment: Assessment } | null = null;
+export type LastResult = CheckResult & { babyId: string; babyName: string; ageDays: number; queued?: boolean };
+let last: LastResult | null = null;
 
 export const lastResult = {
-  set: (value: NonNullable<typeof last>) => {
+  set: (value: LastResult) => {
     last = value;
   },
   get: () => last,

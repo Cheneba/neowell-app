@@ -7,7 +7,7 @@ const LOCALES: { value: Locale; label: string }[] = [
   { value: 'fr', label: 'Français' },
 ];
 
-export function LanguageSwitch() {
+export function LanguageSwitch({ onChange }: { onChange?: (l: Locale) => void } = {}) {
   const { locale, setLocale } = useI18n();
   return (
     <View style={styles.wrap} accessibilityRole="radiogroup">
@@ -16,7 +16,10 @@ export function LanguageSwitch() {
         return (
           <Pressable
             key={l.value}
-            onPress={() => setLocale(l.value)}
+            onPress={() => {
+              setLocale(l.value);
+              onChange?.(l.value);
+            }}
             accessibilityRole="radio"
             accessibilityState={{ selected: active }}
             style={[styles.item, active && styles.active]}

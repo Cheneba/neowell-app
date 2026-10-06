@@ -9,7 +9,7 @@ import { useSession } from '@/lib/session';
 
 export default function Verify() {
   const { t } = useI18n();
-  const { phone } = useLocalSearchParams<{ phone: string }>();
+  const { phone, role } = useLocalSearchParams<{ phone: string; role?: string }>();
   const { signIn, api } = useSession();
   const [code, setCode] = useState('');
   const [error, setError] = useState<string>();
@@ -21,7 +21,7 @@ export default function Verify() {
     setError(undefined);
     setLoading(true);
     try {
-      await signIn(phone, code);
+      await signIn(phone, code, role === 'CLINICIAN' ? 'CLINICIAN' : 'CAREGIVER');
       // The root navigator switches to the signed-in screens automatically.
     } catch (e) {
       setError(e instanceof ApiError && e.status === 401 ? t('auth.wrongCode') : errorMessage(e, t));

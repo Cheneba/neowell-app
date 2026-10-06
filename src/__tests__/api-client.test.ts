@@ -17,7 +17,7 @@ function memoryTokens(initial: { accessToken: string; refreshToken: string } | n
 }
 
 const json = (status: number, body: unknown) =>
-  ({ ok: status >= 200 && status < 300, status, statusText: 'x', json: async () => body }) as Response;
+  ({ ok: status >= 200 && status < 300, status, statusText: 'x', json: async () => body, text: async () => JSON.stringify(body) }) as Response;
 
 describe('api client', () => {
   it('sends the bearer token', async () => {
@@ -77,7 +77,7 @@ describe('api client', () => {
       json(403, { code: 'CONSENT_REQUIRED', message: 'Consent needed' }),
     );
     const api = createApiClient({ baseUrl: 'http://api', tokens: memoryTokens(null), fetchImpl });
-    await expect(api.createObservation('b', {})).rejects.toMatchObject({
+    await expect(api.createObservation('b', { temperatureC: 36.8 })).rejects.toMatchObject({
       status: 403,
       code: 'CONSENT_REQUIRED',
       message: 'Consent needed',

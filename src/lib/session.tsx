@@ -1,6 +1,8 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { type ApiClient, createApiClient, type TokenStore } from '@/api/client';
 import type { Me } from '@/api/types';
+import { offlineQueue } from '@/features/checks/offline-queue';
+import { registerForPush } from '@/features/notifications/notifications';
 import { API_URL } from './config';
 import { storage } from './storage';
 
@@ -21,9 +23,10 @@ type Session = {
   status: Status;
   me: Me | null;
   api: ApiClient;
-  signIn: (phone: string, code: string) => Promise<void>;
+  signIn: (phone: string, code: string, role: 'CAREGIVER' | 'CLINICIAN') => Promise<void>;
   signOut: () => Promise<void>;
   setMe: (me: Me) => void;
+  refreshMe: () => Promise<void>;
 };
 
 const SessionContext = createContext<Session | null>(null);
@@ -45,28 +48,34 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  // Restore a saved session on launch.
+  /** Work to do whenever a signed-in session starts. */
+  const afterSignIn = useCallback(async () => {
+    void registerForPush(api);
+    void offlineQueue.flush(api);
+  }, [api]);
+
   useEffect(() => {
     (async () => {
       if (!(await tokenStore.get())) return setStatus('signedOut');
       try {
         setMe(await api.me());
         setStatus('signedIn');
+        void afterSignIn();
       } catch {
-        // Offline or expired: expired sessions are cleared by the client; offline users retry later.
         setStatus((await tokenStore.get()) ? 'signedIn' : 'signedOut');
       }
     })();
-  }, [api]);
+  }, [api, afterSignIn]);
 
   const signIn = useCallback(
-    async (phone: string, code: string) => {
-      const pair = await api.verifyOtp(phone, code);
+    async (phone: string, code: string, role: 'CAREGIVER' | 'CLINICIAN') => {
+      const pair = await api.verifyOtp(phone, code, role);
       await tokenStore.set({ accessToken: pair.accessToken, refreshToken: pair.refreshToken });
       setMe(await api.me());
       setStatus('signedIn');
+      void afterSignIn();
     },
-    [api],
+    [api, afterSignIn],
   );
 
   const signOut = useCallback(async () => {
@@ -77,10 +86,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setStatus('signedOut');
   }, [api]);
 
-  const value = useMemo(
-    () => ({ status, me, api, signIn, signOut, setMe }),
-    [status, me, api, signIn, signOut],
-  );
+  const refreshMe = useCallback(async () => {
+    setMe(await api.me());
+  }, [api]);
+
+  const value = useMemo(() => ({ status, me, api, signIn, signOut, setMe, refreshMe }), [status, me, api, signIn, signOut, refreshMe]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 

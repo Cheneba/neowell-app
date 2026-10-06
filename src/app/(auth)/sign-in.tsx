@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { LanguageSwitch } from '@/components/language-switch';
 import { Logo } from '@/components/logo';
-import { Body, Button, ErrorText, Field, Screen, Title } from '@/components/ui';
+import { Body, Button, CheckRow, ErrorText, Field, Screen, Title } from '@/components/ui';
 import { useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { toE164 } from '@/lib/phone';
@@ -14,6 +14,7 @@ export default function SignIn() {
   const { t } = useI18n();
   const { api } = useSession();
   const [phone, setPhone] = useState('');
+  const [doctor, setDoctor] = useState(false);
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +25,7 @@ export default function SignIn() {
     setLoading(true);
     try {
       await api.requestOtp(e164);
-      router.push({ pathname: '/verify', params: { phone: e164 } });
+      router.push({ pathname: '/verify', params: { phone: e164, role: doctor ? 'CLINICIAN' : 'CAREGIVER' } });
     } catch (e) {
       setError(errorMessage(e, t));
     } finally {
@@ -55,6 +56,8 @@ export default function SignIn() {
         accessibilityLabel={t('auth.phoneLabel')}
       />
       <ErrorText>{error}</ErrorText>
+      <CheckRow checked={doctor} onToggle={() => setDoctor((v) => !v)} label={t('auth.iAmDoctor')} />
+      {doctor ? <Body muted style={{ fontSize: 14 }}>{t('auth.iAmDoctorHint')}</Body> : null}
     </Screen>
   );
 }

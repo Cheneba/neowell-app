@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image } from 'expo-image';
 import type { ComponentProps, ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -285,4 +286,170 @@ const styles = StyleSheet.create({
   chipSelected: { borderColor: colors.blue, backgroundColor: colors.blueSoft },
   chipText: { fontFamily: fonts.semibold, fontSize: 16, color: colors.ink },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
+});
+
+// ── v2 additions ────────────────────────────────────────────
+
+type Tone = 'info' | 'warning' | 'danger' | 'success' | 'pink';
+const TONES: Record<Tone, { bg: string; fg: string; icon: IconName }> = {
+  info: { bg: colors.blueSoft, fg: colors.blueDeep, icon: 'information-circle' },
+  warning: { bg: colors.yellowSoft, fg: colors.yellow, icon: 'alert-circle' },
+  danger: { bg: colors.redSoft, fg: colors.red, icon: 'warning' },
+  success: { bg: colors.greenSoft, fg: colors.green, icon: 'checkmark-circle' },
+  pink: { bg: colors.pinkSoft, fg: colors.pinkDeep, icon: 'heart' },
+};
+
+/** Inline notice with an optional action. */
+export function Banner({
+  tone = 'info',
+  icon,
+  children,
+  action,
+  onAction,
+}: {
+  tone?: Tone;
+  icon?: IconName;
+  children: ReactNode;
+  action?: string;
+  onAction?: () => void;
+}) {
+  const t = TONES[tone];
+  return (
+    <View style={[v2.banner, { backgroundColor: t.bg }]} accessibilityRole="alert">
+      <Ionicons name={icon ?? t.icon} size={22} color={t.fg} />
+      <View style={{ flex: 1, gap: spacing.xs }}>
+        <Text style={[v2.bannerText, { color: t.fg }]}>{children}</Text>
+        {action ? (
+          <Pressable onPress={onAction} accessibilityRole="button" hitSlop={8}>
+            <Text style={[v2.bannerAction, { color: t.fg }]}>{action} ›</Text>
+          </Pressable>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+export function EmptyState({ icon = 'heart', children }: { icon?: IconName; children: ReactNode }) {
+  return (
+    <View style={v2.empty}>
+      <Ionicons name={icon} size={40} color={colors.pink} />
+      <Body muted style={{ textAlign: 'center' }}>{children}</Body>
+    </View>
+  );
+}
+
+export function Avatar({ name, uri, size = 56 }: { name: string; uri?: string | null; size?: number }) {
+  if (uri) {
+    return <Image source={{ uri }} style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.blueSoft }} />;
+  }
+  const initial = name.replace(/^(Baby|Bébé|Dr|Pr)\s+/i, '').trim().slice(0, 1).toUpperCase() || '♥';
+  return (
+    <View style={[v2.avatar, { width: size, height: size, borderRadius: size / 2 }]}>
+      <Text style={[v2.avatarText, { fontSize: size * 0.42 }]}>{initial}</Text>
+    </View>
+  );
+}
+
+/** Small coloured pill (status, tag). */
+export function Pill({ label, tone = 'info', icon }: { label: string; tone?: Tone; icon?: IconName }) {
+  const t = TONES[tone];
+  return (
+    <View style={[v2.pill, { backgroundColor: t.bg }]}>
+      {icon ? <Ionicons name={icon} size={14} color={t.fg} /> : null}
+      <Text style={[v2.pillText, { color: t.fg }]}>{label}</Text>
+    </View>
+  );
+}
+
+export function ListRow({
+  icon,
+  title,
+  subtitle,
+  onPress,
+  right,
+}: {
+  icon?: IconName;
+  title: string;
+  subtitle?: string;
+  onPress?: () => void;
+  right?: ReactNode;
+}) {
+  return (
+    <Pressable onPress={onPress} disabled={!onPress} accessibilityRole={onPress ? 'button' : undefined} style={({ pressed }) => [v2.row, pressed && { opacity: 0.7 }]}>
+      {icon ? (
+        <View style={v2.rowIcon}>
+          <Ionicons name={icon} size={20} color={colors.blueDeep} />
+        </View>
+      ) : null}
+      <View style={{ flex: 1 }}>
+        <Text style={v2.rowTitle}>{title}</Text>
+        {subtitle ? <Body muted style={{ fontSize: 14 }}>{subtitle}</Body> : null}
+      </View>
+      {right ?? (onPress ? <Ionicons name="chevron-forward" size={20} color={colors.muted} /> : null)}
+    </Pressable>
+  );
+}
+
+/** Tappable checkbox row. */
+export function CheckRow({ checked, onToggle, label }: { checked: boolean; onToggle: () => void; label: string }) {
+  return (
+    <Pressable
+      onPress={onToggle}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked }}
+      style={[v2.check, checked && { borderColor: colors.blue, backgroundColor: colors.blueSoft }]}
+    >
+      <Ionicons name={checked ? 'checkbox' : 'square-outline'} size={26} color={colors.blueDeep} />
+      <Text style={v2.checkText}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/** Segmented single choice (small sets). */
+export function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <View style={v2.segment} accessibilityRole="radiogroup">
+      {options.map((o) => {
+        const active = o.value === value;
+        return (
+          <Pressable
+            key={o.value}
+            onPress={() => onChange(o.value)}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: active }}
+            style={[v2.segmentItem, active && { backgroundColor: colors.blueDeep }]}
+          >
+            <Text style={[v2.segmentText, active && { color: colors.white }]}>{o.label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+const v2 = StyleSheet.create({
+  banner: { flexDirection: 'row', gap: spacing.sm, padding: spacing.md, borderRadius: radius.md, alignItems: 'flex-start' },
+  bannerText: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 21 },
+  bannerAction: { fontFamily: fonts.extrabold, fontSize: 15 },
+  empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xl, paddingHorizontal: spacing.md },
+  avatar: { backgroundColor: colors.pinkSoft, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontFamily: fonts.extrabold, color: colors.pinkDeep },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
+  pillText: { fontFamily: fonts.bold, fontSize: 13 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm, minHeight: 48 },
+  rowIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.blueSoft, alignItems: 'center', justifyContent: 'center' },
+  rowTitle: { fontFamily: fonts.bold, fontSize: 16, color: colors.ink },
+  check: { flexDirection: 'row', gap: spacing.md, alignItems: 'center', padding: spacing.md, borderWidth: 2, borderColor: colors.border, borderRadius: radius.md },
+  checkText: { flex: 1, fontFamily: fonts.semibold, fontSize: 16, color: colors.ink, lineHeight: 22 },
+  segment: { flexDirection: 'row', backgroundColor: colors.blueSoft, borderRadius: radius.pill, padding: 4, alignSelf: 'flex-start', flexWrap: 'wrap' },
+  segmentItem: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.pill, minHeight: 40, justifyContent: 'center' },
+  segmentText: { fontFamily: fonts.bold, fontSize: 14, color: colors.blueDeep },
 });

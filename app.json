@@ -51,7 +51,8 @@
         {
           "locationWhenInUsePermission": "NeoWell uses your location to show the nearest facilities that can care for your baby."
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,
