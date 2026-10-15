@@ -1,11 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { AppNotification } from '@/api/types';
 import { Body, Button, EmptyState, ErrorText, Loading, Screen } from '@/components/ui';
 import { useI18n } from '@/i18n';
 import { errorMessage } from '@/lib/errors';
 import { timeLabel } from '@/lib/format';
+import { onLiveNotification } from '@/lib/realtime';
 import { useSession } from '@/lib/session';
 import { useFocusData } from '@/lib/use-async';
 import { colors, fonts, radius, spacing } from '@/theme';
@@ -14,6 +16,8 @@ export default function Inbox() {
   const { t } = useI18n();
   const { api } = useSession();
   const { data, error, loading, reload } = useFocusData(() => api.notifications());
+
+  useEffect(() => onLiveNotification(() => void reload()), [reload]);
 
   async function open(n: AppNotification) {
     if (!n.readAt) void api.markNotificationsRead({ ids: [n.id] }).catch(() => undefined);

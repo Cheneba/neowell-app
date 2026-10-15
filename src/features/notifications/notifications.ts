@@ -1,4 +1,3 @@
-import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import type { ApiClient } from '@/api/client';
@@ -31,16 +30,17 @@ async function permitted(): Promise<boolean> {
   return (await Notifications.requestPermissionsAsync()).granted;
 }
 
-/** Registers this device for server push (FR-ACC-05). Needs an EAS project id; silently skipped otherwise. */
+/**
+ * Registers this device for server push (FR-ACC-05). The backend sends through Firebase Cloud Messaging,
+ * so this needs the native FCM token (Android, with google-services.json). Silently skipped elsewhere.
+ */
 export async function registerForPush(api: Pick<ApiClient, 'registerDevice'>) {
   try {
-    if (!(await permitted())) return;
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
-    if (!projectId) return;
-    const token = await Notifications.getExpoPushTokenAsync({ projectId });
-    await api.registerDevice(token.data, Platform.OS);
+    if (Platform.OS !== 'android' || !(await permitted())) return;
+    const token = await Notifications.getDevicePushTokenAsync();
+    if (typeof token.data === 'string') await api.registerDevice(token.data, Platform.OS);
   } catch {
-    // Expo Go / no network: reminders still work locally.
+    // No Firebase config / no network: reminders still work locally.
   }
 }
 
