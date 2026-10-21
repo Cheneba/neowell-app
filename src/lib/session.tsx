@@ -4,6 +4,7 @@ import type { Me } from '@/api/types';
 import { offlineQueue } from '@/features/checks/offline-queue';
 import { registerForPush } from '@/features/notifications/notifications';
 import { API_URL } from './config';
+import { connectRealtime, wsUrl } from './realtime';
 import { storage } from './storage';
 
 const TOKENS_KEY = 'neowell.tokens';
@@ -66,6 +67,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
     })();
   }, [api, afterSignIn]);
+
+  // Live notifications while signed in; refreshes the token-bearing socket on each reconnect.
+  useEffect(() => {
+    if (status !== 'signedIn') return;
+    return connectRealtime({ url: wsUrl(API_URL), getToken: async () => (await tokenStore.get())?.accessToken });
+  }, [status]);
 
   const signIn = useCallback(
     async (phone: string, code: string, role: 'CAREGIVER' | 'CLINICIAN') => {

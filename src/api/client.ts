@@ -169,7 +169,7 @@ export function createApiClient(opts: ApiClientOptions) {
       request<Me>('PUT', '/me/consents', data),
     exportData: () => request<unknown>('GET', '/me/export'),
     deleteAccount: () => request<{ purgeAfter: string }>('DELETE', '/me'),
-    registerDevice: (expoPushToken: string, platform: string) => request<{ id: string }>('POST', '/me/devices', { expoPushToken, platform }),
+    registerDevice: (pushToken: string, platform: string) => request<{ id: string }>('POST', '/me/devices', { pushToken, platform }),
     notifications: (cursor?: string) =>
       request<{ items: AppNotification[]; nextCursor: string | null; unreadCount: number }>('GET', `/me/notifications${q({ cursor })}`),
     markNotificationsRead: (body: { ids?: string[]; all?: boolean }) => request<void>('POST', '/me/notifications/read', body),
