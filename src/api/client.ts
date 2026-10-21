@@ -1,5 +1,10 @@
 import { Platform } from 'react-native';
 import type {
+  AdminClinician,
+  AdminDecision,
+  AdminJob,
+  AdminPayout,
+  AdminStats,
   AppNotification,
   Baby,
   BookInput,
@@ -29,6 +34,7 @@ import type {
   Summary,
   TokenPair,
   UploadFile,
+  VerificationStatus,
 } from './types';
 
 export class ApiError extends Error {
@@ -236,6 +242,21 @@ export function createApiClient(opts: ApiClientOptions) {
     drugCharts: (babyId: string) => request<DrugChart[]>('GET', `/babies/${babyId}/drug-charts`),
     logDose: (itemId: string, scheduledFor: string, status: 'GIVEN' | 'SKIPPED') =>
       request<unknown>('POST', `/drug-chart-items/${itemId}/doses`, { scheduledFor, status }),
+
+    // ── Admin ──
+    adminClinicians: (status?: VerificationStatus) =>
+      request<AdminClinician[]>('GET', `/admin/clinicians${q({ status })}`),
+    adminReview: (id: string, decision: AdminDecision, note?: string) =>
+      request<AdminClinician>('POST', `/admin/clinicians/${id}/review`, { decision, note }),
+    adminSetUserActive: (id: string, isActive: boolean) =>
+      request<unknown>('PATCH', `/admin/users/${id}`, { isActive }),
+    adminStats: () => request<AdminStats>('GET', '/admin/stats'),
+    adminPayouts: (status?: 'PENDING' | 'PAID') =>
+      request<AdminPayout[]>('GET', `/admin/payouts${q({ status })}`),
+    adminMarkPayoutPaid: (id: string, reference: string) =>
+      request<AdminPayout>('POST', `/admin/payouts/${id}/mark-paid`, { reference }),
+    adminJobs: (status?: AdminJob['status']) =>
+      request<AdminJob[]>('GET', `/admin/jobs${q({ status })}`),
   };
 }
 

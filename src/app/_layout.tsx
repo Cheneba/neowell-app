@@ -43,6 +43,7 @@ function RootNavigator() {
   const needsConsent = signedIn && me.role === 'CAREGIVER' && !me.consentDataCollectionAt;
   const ready = signedIn && !needsProfile && !needsConsent;
   const isClinician = me?.role === 'CLINICIAN';
+  const isAdmin = me?.role === 'ADMIN';
 
   useEffect(() => {
     if (status !== 'loading') SplashScreen.hide();
@@ -53,9 +54,10 @@ function RootNavigator() {
     () =>
       onNotificationTap((url) => {
         if (!ready) return;
-        router.push((isClinician && url.startsWith('/consultation/') ? `/clinic${url}` : url) as never);
+        if (isAdmin) router.push('/admin' as never);
+        else router.push((isClinician && url.startsWith('/consultation/') ? `/clinic${url}` : url) as never);
       }),
-    [ready, isClinician],
+    [ready, isClinician, isAdmin],
   );
 
   if (status === 'loading') return null;
@@ -69,11 +71,14 @@ function RootNavigator() {
       <Stack.Protected guard={needsProfile || needsConsent}>
         <Stack.Screen name="onboarding" />
       </Stack.Protected>
-      <Stack.Protected guard={ready && !isClinician}>
+      <Stack.Protected guard={ready && !isClinician && !isAdmin}>
         <Stack.Screen name="(caregiver)" />
       </Stack.Protected>
       <Stack.Protected guard={ready && isClinician}>
         <Stack.Screen name="clinic" />
+      </Stack.Protected>
+      <Stack.Protected guard={ready && isAdmin}>
+        <Stack.Screen name="admin" />
       </Stack.Protected>
     </Stack>
   );
