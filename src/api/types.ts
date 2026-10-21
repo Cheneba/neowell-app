@@ -424,3 +424,82 @@ export interface UploadFile {
   name: string;
   type: string;
 }
+
+// ── Admin ───────────────────────────────────────────────────
+export interface AdminDocument {
+  id: string;
+  type: string;
+  originalName: string;
+  uploadedAt: string;
+  url: string | null;
+}
+
+export interface AdminClinician {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  title: string;
+  licenseNumber: string;
+  specialties: string[];
+  bio: string | null;
+  currentFacility: string | null;
+  yearsExperience: number | null;
+  payoutProvider: 'MTN_MOMO' | 'ORANGE_MONEY' | null;
+  payoutPhone: string | null;
+  verificationStatus: VerificationStatus;
+  verificationNote: string | null;
+  verifiedAt: string | null;
+  photoUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    firstName: string | null;
+    lastName: string | null;
+    phone: string;
+    email: string | null;
+    isActive: boolean;
+  };
+  documents: AdminDocument[];
+}
+
+export type AdminDecision = 'VERIFIED' | 'REJECTED' | 'SUSPENDED';
+
+export interface AdminPayout {
+  id: string;
+  clinicianId: string;
+  periodStart: string;
+  periodEnd: string;
+  amountXaf: number;
+  status: 'PENDING' | 'PAID';
+  paidAt: string | null;
+  reference: string | null;
+  createdAt: string;
+  clinician: {
+    id: string;
+    title: string;
+    payoutProvider: 'MTN_MOMO' | 'ORANGE_MONEY' | null;
+    payoutPhone: string | null;
+    user: { firstName: string | null; lastName: string | null };
+  };
+}
+
+export interface AdminJob {
+  id: string;
+  queue: string;
+  payload: unknown;
+  status: 'QUEUED' | 'RUNNING' | 'DONE' | 'FAILED';
+  attempts: number;
+  maxAttempts: number;
+  lastError: string | null;
+  runAt: string;
+  finishedAt: string | null;
+  createdAt: string;
+}
+
+export interface AdminStats {
+  users: { caregivers: number; clinicians: Record<string, number> };
+  babies: number;
+  checks: Record<string, number>;
+  consultations: Record<string, number>;
+  revenueXaf: { gross: number; commission: number };
+}
