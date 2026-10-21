@@ -206,6 +206,8 @@ export interface Facility {
   address: string | null;
   mainPhone: string | null;
   hours: string | null;
+  latitude: number;
+  longitude: number;
   services: string[];
   distanceKm: number;
   departments: FacilityDepartment[];

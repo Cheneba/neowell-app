@@ -50,6 +50,11 @@ export default function Facilities() {
 function FacilityCard({ facility: f }: { facility: Facility }) {
   const { t } = useI18n();
   const call = (phone: string) => Linking.openURL(`tel:${phone.replace(/\s/g, '')}`);
+  // Opens the Google Maps app on the facility's stored coordinates (or the browser version if it is not installed).
+  const openMap = () =>
+    void Linking.openURL(
+      `https://www.google.com/maps/search/?api=1&query=${f.latitude},${f.longitude}`,
+    ).catch(() => undefined);
   return (
     <Card>
       <View style={styles.header}>
@@ -59,9 +64,19 @@ function FacilityCard({ facility: f }: { facility: Facility }) {
             <Body muted style={{ fontSize: 14 }}>{[f.city, f.hours].filter(Boolean).join(' · ')}</Body>
           ) : null}
         </View>
-        <View style={styles.distance}>
-          <Ionicons name="navigate" size={14} color={colors.blueDeep} />
-          <Text style={styles.distanceText}>{t('common.km', { n: f.distanceKm })}</Text>
+        <View style={styles.side}>
+          <View style={styles.distance}>
+            <Ionicons name="navigate" size={14} color={colors.blueDeep} />
+            <Text style={styles.distanceText}>{t('common.km', { n: f.distanceKm })}</Text>
+          </View>
+          <Pressable
+            onPress={openMap}
+            style={({ pressed }) => [styles.mapButton, pressed && { opacity: 0.8 }]}
+            accessibilityRole="button"
+            accessibilityLabel={`${t('facilities.openMap')}: ${f.name}`}
+          >
+            <Ionicons name="map" size={22} color={colors.blueDeep} />
+          </Pressable>
         </View>
       </View>
       <View style={styles.tags}>
@@ -121,6 +136,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  side: { alignItems: 'flex-end', gap: spacing.sm },
+  mapButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: colors.blueDeep,
+    backgroundColor: colors.blueSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   name: { fontFamily: fonts.extrabold, fontSize: 18, color: colors.ink },
   distance: {
     flexDirection: 'row',

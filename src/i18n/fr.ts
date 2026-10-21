@@ -318,6 +318,7 @@ export const fr: Translations = {
     locating: 'Recherche de votre position…',
     permissionDenied: 'Autorisez l’accès à la position pour voir les centres les plus proches.',
     openSettings: 'Autoriser la position',
+    openMap: 'Ouvrir dans Google Maps',
     none: 'Aucun centre trouvé à proximité. En cas d’urgence, allez à l’hôpital le plus proche.',
     services: {
       NEONATOLOGY: 'Néonatologie',

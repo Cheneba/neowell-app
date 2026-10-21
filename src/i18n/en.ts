@@ -317,6 +317,7 @@ export const en = {
     locating: 'Finding your location…',
     permissionDenied: 'Allow location access to see the nearest facilities.',
     openSettings: 'Allow location',
+    openMap: 'Open in Google Maps',
     none: 'No facility found nearby. In an emergency, go to the nearest hospital.',
     services: {
       NEONATOLOGY: 'Neonatology',
