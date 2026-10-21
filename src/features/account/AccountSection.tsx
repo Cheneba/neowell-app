@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Platform, Share, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { LanguageSwitch } from '@/components/language-switch';
-import { Banner, Body, Button, Card, CheckRow, ErrorText, ListRow } from '@/components/ui';
+import { Body, Button, Card, CheckRow, ErrorText, ListRow } from '@/components/ui';
 import { type Locale, useI18n } from '@/i18n';
 import { confirm } from '@/lib/confirm';
 import { errorMessage } from '@/lib/errors';
@@ -9,12 +9,11 @@ import { formatPhone } from '@/lib/phone';
 import { useSession } from '@/lib/session';
 import { colors, fonts, spacing } from '@/theme';
 
-/** Profile, language, consents, data export, deletion and sign-out (FR-ACC). */
+/** Profile, language, consents, deletion and sign-out (FR-ACC). */
 export function AccountSection() {
   const { t, locale } = useI18n();
   const { api, me, setMe, signOut } = useSession();
   const [error, setError] = useState<string>();
-  const [exported, setExported] = useState(false);
   if (!me) return null;
   const caregiver = me.role === 'CAREGIVER';
 
@@ -25,22 +24,6 @@ export function AccountSection() {
   async function toggle(key: 'clinicianShare' | 'recording', value: boolean) {
     try {
       setMe(await api.updateConsents({ [key]: value }));
-    } catch (e) {
-      setError(errorMessage(e, t));
-    }
-  }
-
-  async function exportData() {
-    try {
-      const json = JSON.stringify(await api.exportData(), null, 2);
-      if (Platform.OS === 'web') {
-        const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'neowell-export.json';
-        a.click();
-      } else await Share.share({ message: json, title: 'neowell-export.json' });
-      setExported(true);
     } catch (e) {
       setError(errorMessage(e, t));
     }
@@ -79,8 +62,6 @@ export function AccountSection() {
       ) : null}
 
       <Card>
-        <ListRow icon="download-outline" title={t('me.exportData')} onPress={exportData} />
-        {exported ? <Banner tone="success">{t('me.exported')}</Banner> : null}
         <ListRow icon="trash-outline" title={t('me.deleteAccount')} onPress={deleteAccount} />
       </Card>
       <ErrorText>{error}</ErrorText>

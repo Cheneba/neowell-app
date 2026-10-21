@@ -458,8 +458,6 @@ export const en = {
     language: 'Language',
     phone: 'Phone',
     consents: 'Consents',
-    exportData: 'Export my data',
-    exported: 'Your data is ready.',
     deleteAccount: 'Delete my account',
     deleteConfirm: 'Your account will be closed now and your data deleted after 30 days. Continue?',
     signOut: 'Sign out',

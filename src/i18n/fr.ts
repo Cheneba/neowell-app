@@ -459,8 +459,6 @@ export const fr: Translations = {
     language: 'Langue',
     phone: 'Téléphone',
     consents: 'Consentements',
-    exportData: 'Exporter mes données',
-    exported: 'Vos données sont prêtes.',
     deleteAccount: 'Supprimer mon compte',
     deleteConfirm: 'Votre compte sera fermé maintenant et vos données supprimées après 30 jours. Continuer ?',
     signOut: 'Se déconnecter',

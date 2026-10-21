@@ -167,7 +167,6 @@ export function createApiClient(opts: ApiClientOptions) {
     updateMe: (data: Partial<Pick<Me, 'firstName' | 'lastName' | 'locale' | 'region' | 'city'>>) => request<Me>('PATCH', '/me', data),
     updateConsents: (data: { dataCollection?: boolean; clinicianShare?: boolean; recording?: boolean }) =>
       request<Me>('PUT', '/me/consents', data),
-    exportData: () => request<unknown>('GET', '/me/export'),
     deleteAccount: () => request<{ purgeAfter: string }>('DELETE', '/me'),
     registerDevice: (pushToken: string, platform: string) => request<{ id: string }>('POST', '/me/devices', { pushToken, platform }),
     notifications: (cursor?: string) =>
