@@ -34,6 +34,7 @@ export const en = {
     verify: 'Verify',
     wrongCode: 'That code is wrong or has expired.',
     resend: 'Send a new code',
+    resendIn: 'Send a new code in {seconds}s',
     tooManyRequests: 'Please wait a moment before asking for another code.',
     changeNumber: 'Change number',
     iAmDoctor: 'I am a doctor',

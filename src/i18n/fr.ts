@@ -35,6 +35,7 @@ export const fr: Translations = {
     verify: 'Vérifier',
     wrongCode: 'Ce code est incorrect ou a expiré.',
     resend: 'Envoyer un nouveau code',
+    resendIn: 'Renvoyer un code dans {seconds} s',
     tooManyRequests: 'Veuillez patienter avant de demander un autre code.',
     changeNumber: 'Changer de numéro',
     iAmDoctor: 'Je suis médecin',
