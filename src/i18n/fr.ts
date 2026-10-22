@@ -355,6 +355,7 @@ export const fr: Translations = {
     asap: 'Dès que possible',
     pickSlot: 'Choisissez un horaire',
     noSlots: 'Aucun horaire libre dans les prochains jours.',
+    period: { morning: 'Matin', afternoon: 'Après-midi', evening: 'Soir' },
     reason: 'Quel est le problème ?',
     checklistTitle: 'Avant de réserver, avez-vous…',
     checklist: {

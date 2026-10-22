@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ApiError } from '@/api/client';
 import type { Baby, Clinician, Medium } from '@/api/types';
 import { Body, Button, Card, CheckRow, ChoiceGroup, ErrorText, Field, Label, Loading, Screen } from '@/components/ui';
@@ -14,6 +14,17 @@ import { useSession } from '@/lib/session';
 import { colors, fonts, radius, spacing } from '@/theme';
 
 const CHECKLIST = ['removedClothes', 'cooledRoom', 'sponged', 'rechecked'] as const;
+const PERIODS = ['morning', 'afternoon', 'evening'] as const;
+type Period = (typeof PERIODS)[number];
+
+const periodOf = (iso: string): Period => {
+  const hour = new Date(iso).getHours();
+  return hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+};
+const dayKey = (iso: string) => {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+};
 
 export default function Book() {
   const { t, locale } = useI18n();
@@ -28,6 +39,8 @@ export default function Book() {
   const [medium, setMedium] = useState<Medium>();
   const [timing, setTiming] = useState<'ASAP' | 'SCHEDULED'>('SCHEDULED');
   const [slot, setSlot] = useState<string>();
+  const [dayPick, setDayPick] = useState<string>();
+  const [periodPick, setPeriodPick] = useState<Period>();
   const [reason, setReason] = useState('');
   const [checklist, setChecklist] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string>();
@@ -47,14 +60,27 @@ export default function Book() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api, id]);
 
-  const byDay = useMemo(() => {
+  // Pick up a baby added from this screen when the caregiver comes back to it.
+  useFocusEffect(
+    useCallback(() => {
+      void api.babies().then((bs) => {
+        setBabies(bs);
+        setBabyId((cur) => cur ?? bs[0]?.id);
+      }, () => undefined);
+    }, [api]),
+  );
+
+  const days = useMemo(() => {
     const groups = new Map<string, string[]>();
-    for (const s of slots) {
-      const day = new Date(s).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
-      groups.set(day, [...(groups.get(day) ?? []), s]);
-    }
-    return [...groups.entries()].slice(0, 4);
-  }, [slots, locale]);
+    for (const s of slots) groups.set(dayKey(s), [...(groups.get(dayKey(s)) ?? []), s]);
+    return [...groups.entries()].slice(0, 7).map(([key, times]) => ({ key, times }));
+  }, [slots]);
+
+  const day = days.find((d) => d.key === dayPick) ?? days[0];
+  const periods = PERIODS.filter((p) => day?.times.some((s) => periodOf(s) === p));
+  const period = periodPick && periods.includes(periodPick) ? periodPick : periods[0];
+  const times = day?.times.filter((s) => periodOf(s) === period) ?? [];
+  const intl = locale === 'fr' ? 'fr-FR' : 'en-GB';
 
   if (!clinician) return error ? <Screen><ErrorText>{error}</ErrorText></Screen> : <Loading />;
   const fee = medium ? clinician.media[medium] ?? 0 : 0;
@@ -100,6 +126,12 @@ export default function Book() {
         </>
       }
     >
+      {babies.length === 0 ? (
+        <Card tint={colors.yellowSoft}>
+          <Body>{t('home.noBabies')}</Body>
+          <Button title={t('home.addBaby')} variant="outline" icon="add-circle" onPress={() => router.push('/baby/new')} />
+        </Card>
+      ) : null}
       {babies.length > 1 ? (
         <ChoiceGroup label={t('book.baby')} icon="happy-outline" value={babyId} onChange={setBabyId} options={babies.map((b) => ({ value: b.id, label: babyName(b.displayName, locale) }))} />
       ) : null}
@@ -121,21 +153,38 @@ export default function Book() {
         <CheckRow checked={timing === 'ASAP'} onToggle={() => setTiming(timing === 'ASAP' ? 'SCHEDULED' : 'ASAP')} label={t('book.asap')} />
       ) : null}
       {timing === 'SCHEDULED' ? (
-        byDay.length === 0 ? (
+        days.length === 0 ? (
           <Body muted>{t('book.noSlots')}</Body>
         ) : (
-          byDay.map(([day, times]) => (
-            <View key={day} style={{ gap: spacing.xs }}>
-              <Body style={{ fontFamily: fonts.bold }}>{day}</Body>
-              <View style={styles.chips}>
-                {times.map((s) => (
-                  <Pressable key={s} onPress={() => setSlot(s)} accessibilityRole="radio" accessibilityState={{ selected: slot === s }} style={[styles.chip, slot === s && styles.selected]}>
-                    <Text style={styles.chipText}>{clockLabel(s, locale)}</Text>
+          <View style={{ gap: spacing.sm }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
+              {days.map((d) => {
+                const first = new Date(d.times[0]);
+                const active = d.key === day?.key;
+                return (
+                  <Pressable key={d.key} onPress={() => setDayPick(d.key)} accessibilityRole="radio" accessibilityState={{ selected: active }} style={[styles.day, active && styles.selected]}>
+                    <Text style={styles.dayName}>{first.toLocaleDateString(intl, { weekday: 'short' })}</Text>
+                    <Text style={styles.dayNum}>{first.getDate()}</Text>
+                    <Text style={styles.dayMonth}>{first.toLocaleDateString(intl, { month: 'short' })}</Text>
                   </Pressable>
-                ))}
-              </View>
+                );
+              })}
+            </ScrollView>
+            <View style={styles.strip}>
+              {periods.map((p) => (
+                <Pressable key={p} onPress={() => setPeriodPick(p)} accessibilityRole="radio" accessibilityState={{ selected: p === period }} style={[styles.period, p === period && styles.selected]}>
+                  <Text style={styles.chipText}>{t(`book.period.${p}`)}</Text>
+                </Pressable>
+              ))}
             </View>
-          ))
+            <View style={styles.chips}>
+              {times.map((s) => (
+                <Pressable key={s} onPress={() => setSlot(s)} accessibilityRole="radio" accessibilityState={{ selected: slot === s }} style={[styles.chip, slot === s && styles.selected]}>
+                  <Text style={styles.chipText}>{clockLabel(s, locale)}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
         )
       ) : null}
 
@@ -159,6 +208,12 @@ const styles = StyleSheet.create({
   selected: { borderColor: colors.blue, backgroundColor: colors.blueSoft },
   mediumTitle: { fontFamily: fonts.bold, fontSize: 17, color: colors.ink },
   price: { fontFamily: fonts.extrabold, fontSize: 16, color: colors.pinkDeep },
+  strip: { flexDirection: 'row', gap: spacing.sm },
+  day: { minWidth: 64, minHeight: 72, paddingHorizontal: spacing.sm, borderRadius: radius.md, borderWidth: 2, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  dayName: { fontFamily: fonts.bold, fontSize: 13, color: colors.ink, textTransform: 'capitalize' },
+  dayNum: { fontFamily: fonts.extrabold, fontSize: 20, color: colors.ink },
+  dayMonth: { fontFamily: fonts.bold, fontSize: 12, color: colors.ink, textTransform: 'capitalize' },
+  period: { flex: 1, minHeight: 44, borderRadius: radius.pill, borderWidth: 2, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: { minHeight: 44, paddingHorizontal: spacing.md, borderRadius: radius.pill, borderWidth: 2, borderColor: colors.border, justifyContent: 'center' },
   chipText: { fontFamily: fonts.bold, fontSize: 15, color: colors.ink },

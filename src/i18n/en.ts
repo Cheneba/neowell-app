@@ -354,6 +354,7 @@ export const en = {
     asap: 'As soon as possible',
     pickSlot: 'Choose a time',
     noSlots: 'No free times in the next days.',
+    period: { morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening' },
     reason: 'What is the problem?',
     checklistTitle: 'Before you book, have you…',
     checklist: {
