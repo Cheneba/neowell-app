@@ -36,18 +36,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<Status>('loading');
   const [me, setMe] = useState<Me | null>(null);
 
-  const api = useMemo(
-    () =>
-      createApiClient({
+  const api = useMemo(() => {
+    let client: ApiClient;
+    client = createApiClient({
         baseUrl: API_URL,
         tokens: tokenStore,
+        // A clinician suspended mid-session: reload the profile so the app shows the blocked screen.
+        onAccountBlocked: () => {
+          client.me().then(setMe, () => undefined);
+        },
         onSessionExpired: () => {
           setMe(null);
           setStatus('signedOut');
         },
-      }),
-    [],
-  );
+      });
+    return client;
+  }, []);
 
   /** Work to do whenever a signed-in session starts. */
   const afterSignIn = useCallback(async () => {

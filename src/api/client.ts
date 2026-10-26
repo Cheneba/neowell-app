@@ -55,6 +55,8 @@ export interface ApiClientOptions {
   tokens: TokenStore;
   /** Called when the session can no longer be refreshed, so the app can sign out. */
   onSessionExpired?: () => void;
+  /** Called when the backend refuses a clinician who is no longer verified (suspended, etc.). */
+  onAccountBlocked?: () => void;
   fetchImpl?: typeof fetch;
 }
 
@@ -128,6 +130,7 @@ export function createApiClient(opts: ApiClientOptions) {
       } catch {
         // non-JSON error body
       }
+      if (res.status === 403 && auth && code?.startsWith('CLINICIAN_')) opts.onAccountBlocked?.();
       throw new ApiError(res.status, message, code);
     }
     if (res.status === 204) return undefined as T;

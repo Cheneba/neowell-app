@@ -8,6 +8,7 @@ import {
 import { router, SplashScreen, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { Linking } from 'react-native';
 import { Body, Button, Screen, Title } from '@/components/ui';
 import { configureNotifications, onNotificationTap } from '@/features/notifications/notifications';
 import { I18nProvider, useI18n } from '@/i18n';
@@ -43,7 +44,7 @@ function RootNavigator() {
   const needsConsent = signedIn && me.role === 'CAREGIVER' && !me.consentDataCollectionAt;
   const ready = signedIn && !needsProfile && !needsConsent;
   const isClinician = me?.role === 'CLINICIAN';
-  const isAdmin = me?.role === 'ADMIN';
+  const blocked = isClinician && !!me?.verificationStatus && me.verificationStatus !== 'VERIFIED';
 
   useEffect(() => {
     if (status !== 'loading') SplashScreen.hide();
@@ -61,6 +62,8 @@ function RootNavigator() {
 
   if (status === 'loading') return null;
   if (status === 'signedIn' && !me) return <Offline />;
+  // Suspended or not verified: nothing else in the app is reachable.
+  if (signedIn && blocked) return <Blocked />;
 
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
@@ -95,6 +98,32 @@ function Offline() {
     >
       <Title style={{ marginTop: spacing.xl }}>NeoWell</Title>
       <Body>{t('common.networkError')}</Body>
+    </Screen>
+  );
+}
+
+/** A clinician who is suspended or not verified: only support contact, a status refresh and sign out. */
+function Blocked() {
+  const { t } = useI18n();
+  const { me, refreshMe, signOut } = useSession();
+  const suspended = me?.verificationStatus === 'SUSPENDED';
+  const { email, phone } = me?.support ?? {};
+  return (
+    <Screen
+      footer={
+        <>
+          {email ? <Button title={t('blocked.email')} icon="mail" onPress={() => Linking.openURL(`mailto:${email}`)} /> : null}
+          {phone ? (
+            <Button title={t('blocked.call')} icon="call" onPress={() => Linking.openURL(`tel:${phone.replace(/\s/g, '')}`)} />
+          ) : null}
+          <Button title={t('blocked.refresh')} icon="refresh" variant="ghost" onPress={() => refreshMe().catch(() => undefined)} />
+          <Button title={t('me.signOut')} variant="ghost" onPress={signOut} />
+        </>
+      }
+    >
+      <Title style={{ marginTop: spacing.xl }}>{t(suspended ? 'blocked.suspendedTitle' : 'blocked.unverifiedTitle')}</Title>
+      <Body>{t(suspended ? 'blocked.suspendedBody' : 'blocked.unverifiedBody')}</Body>
+      {!email && !phone ? <Body muted>{t('blocked.noContact')}</Body> : null}
     </Screen>
   );
 }

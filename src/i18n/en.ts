@@ -463,6 +463,18 @@ export const en = {
     deleteConfirm: 'Your account will be closed now and your data deleted after 30 days. Continue?',
     signOut: 'Sign out',
   },
+  blocked: {
+    suspendedTitle: 'Your account is suspended',
+    suspendedBody: 'You cannot use NeoWell until the team lifts the suspension. Please contact support.',
+    unverifiedTitle: 'Your account is not verified',
+    unverifiedBody: 'Your doctor profile has not been verified yet. Finish verification on the NeoWell web dashboard, or contact support.',
+    email: 'Email support',
+    call: 'Call support',
+    refresh: 'Check my status again',
+    noContact: 'Contact the NeoWell team to get help.',
+    signInSuspended: 'Your account is suspended. Please contact support.',
+    signInUnverified: 'Your doctor account is not verified yet. Finish verification on the web dashboard.',
+  },
   clinic: {
     invalidHours: 'Check the hours: use HH:MM, and the end must be after the start.',
     setupTitle: 'Your professional profile',

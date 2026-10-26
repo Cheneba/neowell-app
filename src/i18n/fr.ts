@@ -464,6 +464,18 @@ export const fr: Translations = {
     deleteConfirm: 'Votre compte sera fermé maintenant et vos données supprimées après 30 jours. Continuer ?',
     signOut: 'Se déconnecter',
   },
+  blocked: {
+    suspendedTitle: 'Votre compte est suspendu',
+    suspendedBody: "Vous ne pouvez pas utiliser NeoWell tant que l'équipe n'a pas levé la suspension. Veuillez contacter le support.",
+    unverifiedTitle: "Votre compte n'est pas vérifié",
+    unverifiedBody: "Votre profil de médecin n'a pas encore été vérifié. Terminez la vérification sur le tableau de bord web NeoWell, ou contactez le support.",
+    email: 'Écrire au support',
+    call: 'Appeler le support',
+    refresh: 'Vérifier à nouveau mon statut',
+    noContact: "Contactez l'équipe NeoWell pour obtenir de l'aide.",
+    signInSuspended: 'Votre compte est suspendu. Veuillez contacter le support.',
+    signInUnverified: "Votre compte médecin n'est pas encore vérifié. Terminez la vérification sur le tableau de bord web.",
+  },
   clinic: {
     invalidHours: 'Vérifiez les heures : format HH:MM, et la fin doit être après le début.',
     setupTitle: 'Votre profil professionnel',

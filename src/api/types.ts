@@ -43,6 +43,9 @@ export interface Me {
   consentClinicianShareAt: string | null;
   consentRecordingAt: string | null;
   profileComplete: boolean;
+  /** Clinicians only. Anything but VERIFIED locks the app. */
+  verificationStatus?: 'PENDING_DOCUMENTS' | 'PENDING_REVIEW' | 'VERIFIED' | 'REJECTED' | 'SUSPENDED';
+  support?: { email: string | null; phone: string | null };
 }
 
 export interface Baby {
