@@ -54,10 +54,9 @@ function RootNavigator() {
     () =>
       onNotificationTap((url) => {
         if (!ready) return;
-        if (isAdmin) router.push('/admin' as never);
-        else router.push((isClinician && url.startsWith('/consultation/') ? `/clinic${url}` : url) as never);
+        router.push((isClinician && url.startsWith('/consultation/') ? `/clinic${url}` : url) as never);
       }),
-    [ready, isClinician, isAdmin],
+    [ready, isClinician],
   );
 
   if (status === 'loading') return null;
@@ -71,14 +70,11 @@ function RootNavigator() {
       <Stack.Protected guard={needsProfile || needsConsent}>
         <Stack.Screen name="onboarding" />
       </Stack.Protected>
-      <Stack.Protected guard={ready && !isClinician && !isAdmin}>
+      <Stack.Protected guard={ready && !isClinician}>
         <Stack.Screen name="(caregiver)" />
       </Stack.Protected>
       <Stack.Protected guard={ready && isClinician}>
         <Stack.Screen name="clinic" />
-      </Stack.Protected>
-      <Stack.Protected guard={ready && isAdmin}>
-        <Stack.Screen name="admin" />
       </Stack.Protected>
     </Stack>
   );
